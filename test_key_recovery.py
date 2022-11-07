@@ -48,25 +48,32 @@ def convert_to_binary(l):
   return(X);
 
 def hw(v):
-  res = np.zeros(v.shape,dtype=np.uint8);
+  res = np.zeros(v.shape,dtype=np.uint8)
   for i in range(16):
     res = res + ((v >> i) & 1)
-  return(res);
+  return(res)
 
-low_weight = np.array(range(2**WORD_SIZE), dtype=np.uint16);
-low_weight = low_weight[hw(low_weight) <= 2];
+low_weight = np.array(range(2**WORD_SIZE), dtype=np.uint16)
+low_weight = low_weight[hw(low_weight) <= 2]
 
 #make a plaintext structure
 #takes as input a sequence of plaintexts, a desired plaintext input difference, and a set of neutral bits
 def make_structure(pt0, pt1, diff=(0x211,0xa04),neutral_bits = [20,21,22,14,15]):
-  p0 = np.copy(pt0); p1 = np.copy(pt1);
-  p0 = p0.reshape(-1,1); p1 = p1.reshape(-1,1);
+  # pt0, pt1 = gen_plain(n);
+  # pt0a, pt1a, pt0b, pt1b = make_structure(pt0, pt1, diff=diff, neutral_bits=neutral_bits);
+  p0 = np.copy(pt0)
+  p1 = np.copy(pt1)
+  p0 = p0.reshape(-1,1)
+  p1 = p1.reshape(-1,1)
+
   for i in neutral_bits:
-    d = 1 << i; d0 = d >> 16; d1 = d & 0xffff
-    p0 = np.concatenate([p0,p0^d0],axis=1);
-    p1 = np.concatenate([p1,p1^d1],axis=1);
-  p0b = p0 ^ diff[0]; p1b = p1 ^ diff[1];
-  return(p0,p1,p0b,p1b);
+    d = 1 << i
+    d0 = d >> 16
+    d1 = d & 0xffff
+    p0 = np.concatenate([p0,p0^d0],axis=1)
+    p1 = np.concatenate([p1,p1^d1],axis=1)
+  p0b = p0 ^ diff[0]; p1b = p1 ^ diff[1]
+  return(p0,p1,p0b,p1b)
 
 #generate a Speck key, return expanded key
 def gen_key(nr):
@@ -186,12 +193,16 @@ def bayesian_key_recovery(cts, net=net7, m = m7, s = s7, num_cand = 32, num_iter
     Z = net.predict(X,batch_size=10000);
     Z = Z.reshape(num_cand, -1);
     means = np.mean(Z, axis=1);
-    Z = Z/(1-Z); Z = np.log2(Z); v =np.sum(Z, axis=1); all_v[i * num_cand:(i+1)*num_cand] = v;
+    Z = Z/(1-Z); 
+    Z = np.log2(Z); 
+    v =np.sum(Z, axis=1); 
+    all_v[i * num_cand:(i+1)*num_cand] = v;
     all_keys[i * num_cand:(i+1)*num_cand] = np.copy(keys);
     scores = bayesian_rank_kr(keys, means, m=m, s=s);
     tmp = np.argpartition(scores+used, num_cand)
     keys = tmp[0:num_cand];
-    r = np.random.randint(0,4,num_cand,dtype=np.uint16); r = r << 14; keys = keys ^ r;
+    r = np.random.randint(0,4,num_cand,dtype=np.uint16); r = r << 14; 
+    keys = keys ^ r;
   return(all_keys, scores, all_v);
 
 def test_bayes(cts,it=1, cutoff1=10, cutoff2=10, net=net7, net_help=net6, m_main=m7, m_help=m6, s_main=s7, s_help=s6, verify_breadth=None):

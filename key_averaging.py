@@ -1,3 +1,5 @@
+"""implements KeyAveraging and the creation of high-quality training data using the output of KeyAveraging"""
+
 import train_nets as tn
 import speck as sp
 import numpy as np
@@ -16,12 +18,16 @@ def key_average(ct0a, ct1a, ct0b, ct1b, keys, net):
     pt0b, pt1b = sp.dec_one_round((ct0b, ct1b),keys);
     X = sp.convert_to_binary([pt0a, pt1a, pt0b, pt1b]);
     Z = net.predict(X,batch_size=10000);
-    Z = Z/(1-Z); v = np.average(Z);
+    Z = Z/(1-Z); 
+    v = np.average(Z);
     v = v/(v+1);
     return(v);
 
+
 def make_testset(n, nr=7, diff = (0x40,0x0)):
-  Y = np.frombuffer(urandom(n),dtype=np.uint8); Y = Y & 1;
+  """生成加密了七轮为密文对/随机数据"""
+  Y = np.frombuffer(urandom(n),dtype=np.uint8); 
+  Y = Y & 1;
   pt0a = np.frombuffer(urandom(2*n),dtype=np.uint16);
   pt1a = np.frombuffer(urandom(2*n),dtype=np.uint16);
   pt0b, pt1b = pt0a ^ diff[0], pt1a ^ diff[1];
@@ -35,6 +41,10 @@ def make_testset(n, nr=7, diff = (0x40,0x0)):
   return([ct0a, ct1a, ct0b, ct1b], Y);
 
 def make_trainset_with_teacher(n, net, nr=7, diff=(0x40, 0x0), num_keys=1000, keys=None):
+    """ The size one million sample set so obtained was further used as a training 
+    target for a single-block distinguisher against seven rounds of Speck. 
+    Training was performed from a randomly initialized network state for 300 epochs 
+    at batch size 5000 with a single learning rate drop from 0.001 to 0.0001 at epoch 200"""
     change_keys = (keys is None);
     X,Y = make_testset(n, nr=nr, diff=diff);
     Z = np.zeros(n);

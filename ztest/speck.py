@@ -44,11 +44,6 @@ def dec_one_round(c,k):
     return(c0, c1);
 
 def expand_key(k, t):
-    """
-    密钥拓展算法
-    @para:  k: mian key
-            t: num of round 
-    """
     ks = [0 for i in range(t)];
     ks[0] = k[len(k)-1];
     l = list(reversed(k[:len(k)-1]));
@@ -118,27 +113,20 @@ def readcsv(datei):
 
 #baseline training data generator
 def make_train_data(n, nr, diff=(0x0040,0)):
-    """
-    生成训练数据
-    """
-    Y = np.frombuffer(urandom(n), dtype=np.uint8); 
     # numpy.frombuffer 用于实现动态数组。接受 buffer 输入参数，以流的形式读入转化成 ndarray 对象。
     # numpy.frombuffer(buffer, dtype = float[返回数组的数据类型], count = -1, offset = 0)
     # urandom(n),返回大小为 n 的字节串，它是适合加密使用的随机字节。
+    Y = np.frombuffer(urandom(n), dtype=np.uint8); 
     Y = Y & 1;  # 变成长为n的0，1的numpy.ndarray
     
-    # 随机生成主密钥，满足固定差分diff的明文对（plain0，plain1）
     keys = np.frombuffer(urandom(8*n),dtype=np.uint16).reshape(4,-1);
     plain0l = np.frombuffer(urandom(2*n),dtype=np.uint16);
     plain0r = np.frombuffer(urandom(2*n),dtype=np.uint16);
     plain1l = plain0l ^ diff[0]; plain1r = plain0r ^ diff[1];
     
     num_rand_samples = np.sum(Y==0);
-    # 如果Y=0，就用新生成的随机明文代替Plain1（第二个明文）
     plain1l[Y==0] = np.frombuffer(urandom(2*num_rand_samples),dtype=np.uint16);
     plain1r[Y==0] = np.frombuffer(urandom(2*num_rand_samples),dtype=np.uint16);
-    
-    # 然后对所有的明文对进行nr轮加密
     ks = expand_key(keys, nr);
     ctdata0l, ctdata0r = encrypt((plain0l, plain0r), ks);
     ctdata1l, ctdata1r = encrypt((plain1l, plain1r), ks);
