@@ -188,7 +188,6 @@ def wrong_key_decryption(n, diff=(0x0040, 0x0), nr=7, net=net7):
         sig[i] = np.std(Z)
     return (means, sig)
 
-
 # here, we use some symmetries of the wrong key performance profile
 # by performing the optimization step only on the 14 lowest bits and randomizing the others
 # on CPU, this only gives a very minor speedup, but it is quite useful if a strong GPU is available
@@ -206,7 +205,8 @@ def bayesian_rank_kr(cand, emp_mean, m=m7, s=s7):
     tmp = tmp_br ^ cand
     v = (emp_mean - m[tmp]) * s[tmp]
     v = v.reshape(-1, n)
-    scores = np.linalg.norm(v, axis=1)
+    # np.linalg.norm(x[矩阵], ord=None[范数类型], axis=None[1表示按行向量处理，求多个行向量的范数], keepdims=False[不保留二维特性])
+    scores = np.linalg.norm(v, axis=1)  # 表示对矩阵v的每一行求范数
     return (scores)
 
 
@@ -217,8 +217,7 @@ def bayesian_key_recovery(cts, net=net7, m=m7, s=s7, num_cand=32, num_iter=5, se
     best = 0
     if (not seed is None):
         keys = np.copy(seed)
-    ct0a, ct1a, ct0b, ct1b = np.tile(cts[0], num_cand), np.tile(
-        cts[1], num_cand), np.tile(cts[2], num_cand), np.tile(cts[3], num_cand)
+    ct0a, ct1a, ct0b, ct1b = np.tile(cts[0], num_cand), np.tile(cts[1], num_cand), np.tile(cts[2], num_cand), np.tile(cts[3], num_cand)
     scores = np.zeros(2**(WORD_SIZE-2))
     used = np.zeros(2**(WORD_SIZE-2))
     all_keys = np.zeros(num_cand * num_iter, dtype=np.uint16)

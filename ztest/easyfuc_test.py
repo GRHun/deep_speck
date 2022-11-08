@@ -52,30 +52,35 @@ def test_gen_small_plain(n):
   return(pt0, pt1)
 
 def test_gen_plain(n):
-  pt0 = np.frombuffer(urandom(2*n),dtype=np.uint16);
-  pt1 = np.frombuffer(urandom(2*n),dtype=np.uint16);
-#   print("pt0:\t",pt0)
-#   print("pt1:\t",pt1)
-  return(pt0, pt1);
+  pt0 = np.frombuffer(urandom(2*n),dtype=np.uint16)
+  pt1 = np.frombuffer(urandom(2*n),dtype=np.uint16)
+  print("pt0:\t",pt0)
+  print("pt1:\t",pt1)
+  return(pt0, pt1)
 
-def test_neutal():
-    num_struct = 3
-    pt0, pt1 = test_gen_plain(num_struct)
-    diff=(0x211, 0xa04)
-    neutral_bits = [20,21,22,14,15,23]
-    p0 = np.copy(pt0)
-    p1 = np.copy(pt1)
-    p0 = p0.reshape(-1,1)
-    p1 = p1.reshape(-1,1)
-  
+def test_make_struct(n, neutral_bits=[1, 18, 2], diff=(0x211, 0xa04)):
+    p0,p1 = test_gen_plain(n)
+    p0 = p0.reshape(-1, 1)
+    p1 = p1.reshape(-1, 1)
+    print("p0\n",p0)
+    print("p1\n",p1)
+
+    # i 需要区分大于16和小于16的情况
     for i in neutral_bits:
+        print("\n====>",i)
         d = 1 << i
         d0 = d >> 16
         d1 = d & 0xffff
-        p0 = np.concatenate([p0,p0^d0],axis=1)
-        p1 = np.concatenate([p1,p1^d1],axis=1)
-    p0b = p0 ^ diff[0]; p1b = p1 ^ diff[1]
-    return(p0,p1,p0b,p1b)
+        print("d0:\t",d0)
+        print("d1:\t",d1)
+        p0 = np.concatenate([p0, p0 ^ d0], axis=1)
+        p1 = np.concatenate([p1, p1 ^ d1], axis=1)
+        print("now p0 is:\n",p0)
+        print("now p1 is:\n",p1)
+    p0b = p0 ^ diff[0]
+    p1b = p1 ^ diff[1]
+    return (p0, p1, p0b, p1b)
+
 
 def hw(v):
   res = np.zeros(v.shape,dtype=np.uint8)
@@ -116,7 +121,7 @@ def test_expand_key(k, t):
     # return(ks);
     return(ks);
 
-def test_make_structure(pt0, pt1, diff=(0x211, 0xa04), neutral_bits=[1, 21, 22, 14, 15]):
+def test_make_structure(pt0, pt1, diff=(0x211, 0xa04), neutral_bits=[1, 18, 22, 14, 15]):
     """生成明文结构
     @para:  (pt0,pt1) - 明文对
     @example: 
@@ -143,6 +148,16 @@ def test_make_structure(pt0, pt1, diff=(0x211, 0xa04), neutral_bits=[1, 21, 22, 
     p1b = p1 ^ diff[1]
     return (p0, p1, p0b, p1b)
 
+def test_linalg_norm():
+    # np.linalg.norm(
+    # x[矩阵], ord=None[范数类型], 
+    # axis=None[1表示按行向量处理，求多个行向量的范数], 
+    # keepdims=False[不保留二维特性])
+    
+    v = np.array([[3,4,],
+                [1,1]])
+    res = np.linalg.norm(v, axis=1)  # axis=1表示对矩阵的每一行求范数
+    print("res",res)
 
 def test():
     pass
@@ -156,8 +171,9 @@ if __name__=="__main__":
     # test_low_weight()
     # test_gen_plain(n=4)
     # test_expand_key((0x1918,0x1110,0x0908,0x0100), 5)
-    n = 5
-    a, b = test_gen_small_plain(n)
-    test_make_structure(a,b)
+    
+    # n = 5
+    # a, b = test_gen_plain(n)
+    # test_make_structure(a,b)
     test()
-
+    test_linalg_norm()

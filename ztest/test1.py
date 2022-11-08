@@ -1,8 +1,11 @@
-i = 1
+import numpy as np
+from os import urandom
 
-d = 1 << i
-d0 = d >> 16
-d1 = d & 0xffff
-print(d)
-print(d0 )
-print(d1)
+
+def test(n):
+    pass
+
+if __name__=="__main__":
+    n = 3
+    test(n)
+

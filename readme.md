@@ -49,7 +49,7 @@ Instructions for each of the experiments:
    The 11-round attack will produce three files that contain numpy arrays with the following information:
 
    - run_sols1.npy contains the bit difference between real subkey and best guess for the last subkey for each run.
-   - run_sols2.npy contains the bit difference between real subkey and best guess for the penultimate subkey for each run.
+   - run_sols2.npy contains the bit difference between real subkey and best guess for the penultimate(last but one) subkey for each run.
    - run_good.npy records the maximal number of good transitions of the initial differential for all ciphertext structures used in each run. This information is given to show which runs were solvable in principle using the techniques described in the paper.
 
    During the run, the script will show how many test cases have been completed. For each completed test, also the bit difference between the final guesses of the last two subkeys and the actual last subkeys is shown.
