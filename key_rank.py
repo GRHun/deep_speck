@@ -1,3 +1,8 @@
+"""
+a script (key_rank.py) that calculates key rank statistics for the 9-round attack of the paper 
+with a neural distinguisher
+when between 32 and 128 ciphertext pairs of data are available"""
+
 from os import urandom
 from keras.models import model_from_json
 

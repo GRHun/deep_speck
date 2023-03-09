@@ -6,7 +6,7 @@ This repository holds supplementary code and data to the paper "Improving Attack
 - a basic training script that will train a 10-block deep residual network to distinguish 5-round Speck from random data using the basic training pipeline described in the paper (train_5_rounds.py),
 - pre-trained neural distinguishers for 5,6,7 and 8 rounds of Speck,
 - a proof of concept implementation of neural input difference search using few-shot-learning (neural_difference_search.py),
-- a script that evaluates the pre-trained neural distinguishers both in the real-vs-random setting and in the real differences setting of section 5 of the paper (eval.py),
+- a script that evaluates the pre-trained neural distinguishers both in the real-vs-random setting and in the real differences setting of section 5 (The real differences exp) of the paper (eval.py),
 - a script (key_rank.py) that calculates key rank statistics for the 9-round attack of the paper with a neural distinguisher when between 32 and 128 ciphertext pairs of data are available,
 - another script (key_rank_ddt.py) that implements the same experiment using DDT-based distinguishers,
 - a python program that looks at whether the performance of the 7-round neural distinguisher supplied in this repository is key-dependent (key_nonuniformity.py),
@@ -44,7 +44,9 @@ Instructions for each of the experiments:
 
 1. **test_key_recovery.py**: run from terminal using the command _python3 test_key_recovery.py_ .
 
-   Note that this will run the 11-round attack 100 times and then run a 12-round attack (not described in the paper but using exactly the same code) 20 times. The latter will take some time unless a fast GPU is available (one run of the 12-round attack should take roughly 12 hours on a quad-core PC without GPU). Note that the 12-round attack is with these settings successful only in about 40 percent of cases, so one run is likely not going to be sufficient to demonstrate that it works. Remove the last few lines of the script to turn the 12-round attack off.
+   Note that this will run the **11-round attack** 100 times and then run a **12-round attack** (not described in the paper but using exactly the same code) 20 times. 
+
+   The latter will take some time unless a fast GPU is available (one run of the 12-round attack should take roughly 12 hours on a quad-core PC without GPU). Note that the 12-round attack is with these settings successful only in about 40 percent of cases, so one run is likely not going to be sufficient to demonstrate that it works. Remove the last few lines of the script to turn the 12-round attack off.
 
    The 11-round attack will produce three files that contain numpy arrays with the following information:
 
@@ -62,7 +64,7 @@ Instructions for each of the experiments:
 
 4. **speck.cpp**: compile as directed above and run the resulting speck_analysis binary from terminal. Output should be self-explanatory. The csv file produced can be read by the readcsv function of the python module implementing speck. It is then possible to compare the predictions made by the Markov model to predictions produced for instance by the pre-trained five-round neural network here included.
 
-5. **neural_difference_search.py**: run from terminal using *python3 neural_difference_search.py*. This will first briefly train a fresh 3-round distinguisher for Speck with a random input difference and then use this distinguisher with few-shot-learning and the generic optimization algorithm described in the paper to search for input differences that can be more efficiently distinguished. Progress (few-shot distinguisher efficiency for three rounds, extensions to more rounds, input difference) is shown each time an improvement is found. The search is restarted ten times to give a sample of possible results of the algorithm.
+5. **neural_difference_search.py**: run from terminal using *python3 neural_difference_search.py*. This will first briefly train a fresh 3-round distinguisher for Speck with a random input difference and then use this distinguisher with **few-shot-learning** and the generic optimization algorithm described in the paper to search for input differences that can be more efficiently distinguished. Progress (few-shot distinguisher efficiency for three rounds, extensions to more rounds, input difference) is shown each time an improvement is found. The search is restarted ten times to give a sample of possible results of the algorithm.
 
 6. **key_rank.py**: generates key-rank statistics for a simple 9-round attack on Speck32/64 when the attack is using a neural distinguisher.
 

@@ -47,8 +47,10 @@ def test_pickle(Bird):
     print(picklestring)
 
 def test_gen_small_plain(n):
-  pt0 = np.frombuffer(urandom(n),dtype=np.uint8);
-  pt1 = np.frombuffer(urandom(n),dtype=np.uint8);
+  pt0 = np.frombuffer(urandom(n),dtype=np.uint8)
+  pt1 = np.frombuffer(urandom(n),dtype=np.uint8)
+#   print("pt0:\t",pt0)
+#   print("pt1:\t",pt1)
   return(pt0, pt1)
 
 def test_gen_plain(n):
@@ -56,7 +58,42 @@ def test_gen_plain(n):
   pt1 = np.frombuffer(urandom(2*n),dtype=np.uint16)
   print("pt0:\t",pt0)
   print("pt1:\t",pt1)
+#   print(convert_to_binary(pt0))
   return(pt0, pt1)
+
+def make_train_data(n, nr, diff=(0x0040, 0)):
+    """
+    生成训练数据, 返回(X,Y), 16位的二进制([ctdata0l, ctdata0r, ctdata1l, ctdata1r])
+    @para:  n   - 生成的数据数量
+            nr  - 加密轮数
+    """
+    Y = np.frombuffer(urandom(n), dtype=np.uint8)
+    # numpy.frombuffer 用于实现动态数组。接受 buffer 输入参数，以流的形式读入转化成 ndarray 对象。
+    # numpy.frombuffer(buffer, dtype = float[返回数组的数据类型], count = -1, offset = 0)
+    # urandom(n),返回大小为 n 的字节串，它是适合加密使用的随机字节。
+    Y = Y & 1  # 取最后一位，Y变成长为n的0，1的numpy.ndarray
+
+    # 随机生成主密钥，满足固定差分diff的明文对（plain0，plain1）
+    keys = np.frombuffer(urandom(8*n), dtype=np.uint16).reshape(4, -1)
+    plain0l = np.frombuffer(urandom(2*n), dtype=np.uint16)
+    plain0r = np.frombuffer(urandom(2*n), dtype=np.uint16)
+    plain1l = plain0l ^ diff[0]
+    plain1r = plain0r ^ diff[1]
+
+    num_rand_samples = np.sum(Y == 0)
+    # 如果Y=0，就用新生成的随机明文代替Plain1（第二个明文）
+    plain1l[Y == 0] = np.frombuffer(
+        urandom(2*num_rand_samples), dtype=np.uint16)
+    plain1r[Y == 0] = np.frombuffer(
+        urandom(2*num_rand_samples), dtype=np.uint16)
+
+    ks = expand_key(keys, nr)   # 生成nr个字密钥
+    # 然后对所有的明文对进行nr轮加密
+    ctdata0l, ctdata0r = encrypt((plain0l, plain0r), ks)
+    ctdata1l, ctdata1r = encrypt((plain1l, plain1r), ks)
+    X = convert_to_binary([ctdata0l, ctdata0r, ctdata1l, ctdata1r])
+    return (X, Y)
+
 
 def test_make_struct(n, neutral_bits=[1, 18, 2], diff=(0x211, 0xa04)):
     p0,p1 = test_gen_plain(n)
@@ -80,7 +117,6 @@ def test_make_struct(n, neutral_bits=[1, 18, 2], diff=(0x211, 0xa04)):
     p0b = p0 ^ diff[0]
     p1b = p1 ^ diff[1]
     return (p0, p1, p0b, p1b)
-
 
 def hw(v):
   res = np.zeros(v.shape,dtype=np.uint8)
@@ -153,7 +189,6 @@ def test_linalg_norm():
     # x[矩阵], ord=None[范数类型], 
     # axis=None[1表示按行向量处理，求多个行向量的范数], 
     # keepdims=False[不保留二维特性])
-    
     v = np.array([[3,4,],
                 [1,1]])
     res = np.linalg.norm(v, axis=1)  # axis=1表示对矩阵的每一行求范数
@@ -169,11 +204,12 @@ if __name__=="__main__":
     # test_pickle(Bird)
     # test_neutal()
     # test_low_weight()
-    # test_gen_plain(n=4)
+    # test_gen_small_plain(n=10)
+    # test_gen_plain(n=10)
     # test_expand_key((0x1918,0x1110,0x0908,0x0100), 5)
     
-    # n = 5
-    # a, b = test_gen_plain(n)
-    # test_make_structure(a,b)
-    test()
-    test_linalg_norm()
+    n = 5
+    a, b = test_gen_plain(n)
+    print(test_make_structure(a,b))
+    # test()
+    # test_linalg_norm()

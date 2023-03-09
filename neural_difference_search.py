@@ -1,3 +1,7 @@
+
+"""
+a proof of concept implementation of neural input difference search using few-shot-learning 
+"""
 #test if rapid training runs using neural networks can be used to find good initial differences in Speck32/64
 #idea: try all differences up to a certain weight and keep track of the performance level reached
 

@@ -1,3 +1,8 @@
+"""
+a script that evaluates the pre-trained neural distinguishers 
+both in the real-vs-random setting  and in the real differences setting of section 5 (The real differences exp) of the paper
+"""
+
 import speck as sp
 import numpy as np
 
@@ -35,6 +40,8 @@ X6,Y6 = sp.make_train_data(10**6,6);
 X7,Y7 = sp.make_train_data(10**6,7);
 X8,Y8 = sp.make_train_data(10**6,8);
 
+
+# real_differences_data 就是密文异或了盲值的数据
 X5r, Y5r = sp.real_differences_data(10**6,5);
 X6r, Y6r = sp.real_differences_data(10**6,6);
 X7r, Y7r = sp.real_differences_data(10**6,7);

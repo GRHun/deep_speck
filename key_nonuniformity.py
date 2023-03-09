@@ -1,3 +1,9 @@
+"""
+a python program that looks at 
+whether the performance of the 7-round neural distinguisher supplied in this repository is key-dependent 
+"""
+
+
 #this tests whether the performance of a given neural distinguisher is key dependent
 #We generate some fixed keys, then calculate MSE and true positive rate for a test set
 #The test set consists solely of real ciphertext pairs encrypted with the key under study

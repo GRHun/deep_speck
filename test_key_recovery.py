@@ -242,6 +242,14 @@ def bayesian_key_recovery(cts, net=net7, m=m7, s=s7, num_cand=32, num_iter=5, se
         r = r << 14
         keys = keys ^ r
     return (all_keys, scores, all_v)
+    """
+$ import numpy as np
+$ a = np.array([9, 4, 4, 3, 3, 9, 0, 4, 6, 0])
+$ print(np.argpartition(a, 4)) #将数组a中所有元素（包括重复元素）从小到大排列，比第5大的元素小的放在前面，大的放在后面，输出新数组索引
+>> [6 9 4 3 7 2 1 5 8 0]
+$ a[np.argpartition(a, 4)]     #输出新数组索引对应的数组
+>> array([0, 0, 3, 3, 4, 4, 4, 9, 6, 9])
+    """
 
 
 def test_bayes(cts, it=1, cutoff1=10, cutoff2=10, net=net7, net_help=net6, m_main=m7, m_help=m6, s_main=s7, s_help=s6, verify_breadth=None):

@@ -136,7 +136,7 @@ def readcsv(datei):
 # * baseline training data generator
 def make_train_data(n, nr, diff=(0x0040, 0)):
     """
-    生成训练数据
+    生成n个nr轮的训练数据
     @para:  n   - 生成的数据数量
             nr  - 加密轮数
     """
@@ -168,8 +168,6 @@ def make_train_data(n, nr, diff=(0x0040, 0)):
     return (X, Y)
 
 # real differences data generator
-
-
 def real_differences_data(n, nr, diff=(0x0040, 0)):
     # generate labels
     Y = np.frombuffer(urandom(n), dtype=np.uint8)
