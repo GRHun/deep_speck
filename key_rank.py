@@ -1,7 +1,10 @@
 """
 a script (key_rank.py) that calculates key rank statistics for the 9-round attack of the paper 
 with a neural distinguisher
-when between 32 and 128 ciphertext pairs of data are available"""
+when between 32 and 128 ciphertext pairs of data are available
+
+generates key-rank statistics for a simple 9-round attack on Speck32/64 when the attack is using a neural distinguisher.
+"""
 
 from os import urandom
 from keras.models import model_from_json

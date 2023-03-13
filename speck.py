@@ -101,10 +101,12 @@ def check_testvector():
 # it returns an array of bit vectors containing the same data
 def convert_to_binary(arr):
     X = np.zeros((4 * WORD_SIZE(), len(arr[0])), dtype=np.uint8)
+    # zeros(shape, dtype=float, order='C')
     for i in range(4 * WORD_SIZE()):
         index = i // WORD_SIZE()
         offset = WORD_SIZE() - (i % WORD_SIZE()) - 1
         X[i] = (arr[index] >> offset) & 1
+    # 对于二维ndarray，transpose在不指定参数是默认是矩阵转置
     X = X.transpose()
     return (X)
 
@@ -114,6 +116,7 @@ def convert_to_binary(arr):
 def readcsv(datei):
     data = np.genfromtxt(datei, delimiter=' ', converters={
                          x: lambda s: int(s, 16) for x in range(2)})
+
     X0 = [data[i][0] for i in range(len(data))]
     X1 = [data[i][1] for i in range(len(data))]
     Y = [data[i][3] for i in range(len(data))]
@@ -141,13 +144,15 @@ def make_train_data(n, nr, diff=(0x0040, 0)):
             nr  - 加密轮数
     """
     Y = np.frombuffer(urandom(n), dtype=np.uint8)
+    # print("===> Y when n =\n",n,Y)  #  例子：n=4 [160  92 216 193]
     # numpy.frombuffer 用于实现动态数组。接受 buffer 输入参数，以流的形式读入转化成 ndarray 对象。
     # numpy.frombuffer(buffer, dtype = float[返回数组的数据类型], count = -1, offset = 0)
-    # urandom(n),返回大小为 n 的字节串，它是适合加密使用的随机字节。
+    # urandom(n) Return a string of n random bytes suitable for cryptographic use
+    # 一个字节存储8位无符号数，储存的数值范围为0-255
     Y = Y & 1  # 取最后一位，Y变成长为n的0，1的numpy.ndarray
 
     # 随机生成主密钥，满足固定差分diff的明文对（plain0，plain1）
-    keys = np.frombuffer(urandom(8*n), dtype=np.uint16).reshape(4, -1)
+    keys = np.frombuffer(urandom(8*n), dtype=np.uint16).reshape(4, -1) #-1表示列数是自动计算的，划为4行
     plain0l = np.frombuffer(urandom(2*n), dtype=np.uint16)
     plain0r = np.frombuffer(urandom(2*n), dtype=np.uint16)
     plain1l = plain0l ^ diff[0]

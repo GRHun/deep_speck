@@ -74,6 +74,7 @@ def make_structure(pt0, pt1, diff=(0x211, 0xa04), neutral_bits=[20, 21, 22, 14, 
     """
     p0 = np.copy(pt0)
     p1 = np.copy(pt1)
+    # 拉成一列
     p0 = p0.reshape(-1, 1)
     p1 = p1.reshape(-1, 1)
 
@@ -107,6 +108,9 @@ def gen_plain(n):
 
 
 def gen_challenge(n, nr, diff=(0x211, 0xa04), neutral_bits=[20, 21, 22, 14, 15, 23], keyschedule='real'):
+    """
+    返回加密了nr轮的密文结构和加密密钥
+    首先生成n个明文结构，再密钥0向上解密一轮，最后返回加密了nr轮的密文结构【2^{#NB} * 4】和加密密钥（list"""
     pt0, pt1 = gen_plain(n)
     pt0a, pt1a, pt0b, pt1b = make_structure(pt0, pt1, diff=diff, neutral_bits=neutral_bits)
     pt0a, pt1a = sp.dec_one_round((pt0a, pt1a), 0)
@@ -189,7 +193,7 @@ def wrong_key_decryption(n, diff=(0x0040, 0x0), nr=7, net=net7):
     return (means, sig)
 
 # here, we use some symmetries of the wrong key performance profile
-# by performing the optimization step only on the 14 lowest bits and randomizing the others
+#! by performing the optimization step only on the 14 lowest bits and randomizing the others
 # on CPU, this only gives a very minor speedup, but it is quite useful if a strong GPU is available
 # In effect, this is a simple partial mitigation of the fact that we are running single-threaded numpy code here
 tmp_br = np.arange(2**14, dtype=np.uint16)
@@ -206,18 +210,23 @@ def bayesian_rank_kr(cand, emp_mean, m=m7, s=s7):
     v = (emp_mean - m[tmp]) * s[tmp]
     v = v.reshape(-1, n)
     # np.linalg.norm(x[矩阵], ord=None[范数类型], axis=None[1表示按行向量处理，求多个行向量的范数], keepdims=False[不保留二维特性])
+    # ord=None：默认情况下，是求整体的矩阵元素平方和，再开根号
     scores = np.linalg.norm(v, axis=1)  # 表示对矩阵v的每一行求范数
     return (scores)
 
 
 def bayesian_key_recovery(cts, net=net7, m=m7, s=s7, num_cand=32, num_iter=5, seed=None):
-    n = len(cts[0])
-    keys = np.random.choice(2**(WORD_SIZE-2), num_cand, replace=False)
+    # 用7R ND, candidate key num n=32, BO key search policy的迭代次数是5
+    n = len(cts[0])  # 密文结构的数目
+    keys = np.random.choice(2**(WORD_SIZE-2), num_cand, replace=False)  # 生成num_cand个14bit的密钥
     scores = 0
     best = 0
     if (not seed is None):
         keys = np.copy(seed)
     ct0a, ct1a, ct0b, ct1b = np.tile(cts[0], num_cand), np.tile(cts[1], num_cand), np.tile(cts[2], num_cand), np.tile(cts[3], num_cand)
+    # Numpy的tile()函数，就是将原矩阵横向、纵向地复制。tile是瓷砖的意思，顾名思义，这个函数就是把数组像瓷砖一样铺展开来
+    # numpy.tile(A输入数组, reps沿每个轴的A重复次数) 
+    # tile([1,2],2)  ==》array([1, 2, 1, 2])
     scores = np.zeros(2**(WORD_SIZE-2))
     used = np.zeros(2**(WORD_SIZE-2))
     all_keys = np.zeros(num_cand * num_iter, dtype=np.uint16)
@@ -238,25 +247,25 @@ def bayesian_key_recovery(cts, net=net7, m=m7, s=s7, num_cand=32, num_iter=5, se
         scores = bayesian_rank_kr(keys, means, m=m, s=s)
         tmp = np.argpartition(scores+used, num_cand)
         keys = tmp[0:num_cand]
-        r = np.random.randint(0, 4, num_cand, dtype=np.uint16)
-        r = r << 14
+        r = np.random.randint(0, 4, num_cand, dtype=np.uint16)  # 生成的数值在[low, high)区间，即是生成0-3（00.01.11）
+        r = r << 14  # 往左移动14位，送到最高14、15位，其实就是随机化了最高两位，对应 only on the 14 lowest bits and randomizing the others
         keys = keys ^ r
     return (all_keys, scores, all_v)
-    """
-$ import numpy as np
-$ a = np.array([9, 4, 4, 3, 3, 9, 0, 4, 6, 0])
-$ print(np.argpartition(a, 4)) #将数组a中所有元素（包括重复元素）从小到大排列，比第5大的元素小的放在前面，大的放在后面，输出新数组索引
->> [6 9 4 3 7 2 1 5 8 0]
-$ a[np.argpartition(a, 4)]     #输出新数组索引对应的数组
->> array([0, 0, 3, 3, 4, 4, 4, 9, 6, 9])
+    """argpartition用法示例
+    $ import numpy as np
+    $ a = np.array([9, 4, 4, 3, 3, 9, 0, 4, 6, 0])
+    $ print(np.argpartition(a, 4)) #将数组a中所有元素（包括重复元素）从小到大排列，比第5大的元素小的放在前面，大的放在后面，输出新数组索引
+    >> [6 9 4 3 7 2 1 5 8 0]
+    $ a[np.argpartition(a, 4)]     #输出新数组索引对应的数组
+    >> array([0, 0, 3, 3, 4, 4, 4, 9, 6, 9])
     """
 
 
 def test_bayes(cts, it=1, cutoff1=10, cutoff2=10, net=net7, net_help=net6, m_main=m7, m_help=m6, s_main=s7, s_help=s6, verify_breadth=None):
     n = len(cts[0])
     if (verify_breadth is None):
-        verify_breadth = len(cts[0][0])
-    alpha = sqrt(n)
+        verify_breadth = len(cts[0][0])  # 2^{#NB} 或者说 密文结构中密文的个数
+    alpha = sqrt(n)  # 计算的是UCB方法中的alpha = sqrt(# cts)
     best_val = -100.0
     best_key = (0, 0)
     best_pod = 0
@@ -269,11 +278,15 @@ def test_bayes(cts, it=1, cutoff1=10, cutoff2=10, net=net7, net_help=net6, m_mai
     guess_count = np.zeros(2**16, dtype=np.uint16)
     for j in range(it):
         priority = local_best + alpha * np.sqrt(log2(j+1) / num_visits)
-        i = np.argmax(priority)
+        i = np.argmax(priority) #  选择密文结构，i保存cts的下标
         num_visits[i] = num_visits[i] + 1
-        if (best_val > cutoff2):
+        if (best_val > cutoff2):  # 如果大于C2
+            """ Before we return a key, we perform a small verification search 
+            with hamming radius two around the two subkey candidates that are currently best.
+            This removes remaining bit errors in the key guess. If the verification search yields an improvement, 
+            it is repeated with the new best key guess."""
             improvement = (verify_breadth > 0)
-            while improvement:
+            while improvement:  # 用helper ND进行下一步验证，net_help=net6
                 k1, k2, val = verifier_search([cts[0][best_pod], cts[1][best_pod], cts[2]
                                               [best_pod], cts[3][best_pod]], best_key, net=net_help, use_n=verify_breadth)
                 improvement = (val > best_val)

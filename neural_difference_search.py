@@ -1,6 +1,10 @@
 
 """
-a proof of concept implementation of neural input difference search using few-shot-learning 
+a proof of concept implementation of neural input difference search using few-shot-learning
+This will first briefly train a fresh 3-round distinguisher for Speck with a random input difference and 
+then use this distinguisher with few-shot-learning and the generic optimization algorithm described in the paper to search for input differences that can be more efficiently distinguished.
+Progress (few-shot distinguisher efficiency for three rounds, extensions to more rounds, input difference) is shown each time an improvement is found.
+The search is restarted ten times to give a sample of possible results of the algorithm.
 """
 #test if rapid training runs using neural networks can be used to find good initial differences in Speck32/64
 #idea: try all differences up to a certain weight and keep track of the performance level reached

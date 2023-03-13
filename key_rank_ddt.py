@@ -1,7 +1,10 @@
 """
 calculates key rank statistics for the 9-round attack of the paper 
 using DDT-based distinguishers
-when between 32 and 128 ciphertext pairs of data are available"""
+when between 32 and 128 ciphertext pairs of data are available
+
+use the stats_key_rank function to do the same as the previous script, but using a difference distribution table. 
+The DDT needs to be separately loaded. """
 
 
 from os import urandom
